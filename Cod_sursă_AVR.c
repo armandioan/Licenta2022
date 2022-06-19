@@ -1,16 +1,17 @@
 #include <mega328p.h>
-#include <stdio.h>    // Standard Input/Output functions
-#include <delay.h>
-//#include <stdlib.h>
-// Declare your global variables here
-#define false 0
-#define true 1
-#define High0  2500
-#define Low0 17500
-#define High1  500
-#define Low1 19500
-#define halfPeriod 500  //= 1000000L/frequency/2; //500 pt 1kHz, 1000 pt 500hz  
+#include <stdio.h>    	// Standard Input/Output functions
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include <delay.h>	//singura bibliotecă adăugată de mine 
+
+// Declare your global variables here
+#define false 0		
+#define true 1		
+#define High0  2500	//timpul High pentru PWM servomotor cand mut axul in pozitia 0
+#define Low0 17500	//timpul Low pentru PWM servomotor cand mut axul in pozitia 0
+#define High1  500	//timpul High pentru PWM servomotor cand mut axul in pozitia 1
+#define Low1 19500	//timpul Low pentru PWM servomotor cand mut axul in pozitia 1
+#define halfPeriod 500  //= 1000000L/frequency/2; //500 pt 1kHz, 1000 pt 500hz  
 
 unsigned long Time = 0, currentTime = 4000, a1_previousTime=0, a2_previousTime = 0, a3_previousTime = 0,  previousTime = 0;       
 float set_temp[] = {16.5, 16.5, 16.5}, t1 = 17.1, t2 = 17.2, t3 = 17.3 , decalaj_Mod = 0.5;   //t[] ={ 29.1, 29.2, 29.3} ;                    
@@ -19,28 +20,15 @@ unsigned char h1 = 91, h2 = 92, h3 = 93;
 unsigned char i = 0, cnt0 = 0; 
 unsigned char to_esp[30], from_esp[16], Mod_Incalzire = 0, Mod_Noapte = 0;
 
-
-//functii
+//functii//////////////////////////////////////
 unsigned long mili ();
 unsigned char rxpushchar();
-void txpopcharar(unsigned char str[]);  // *str[]
+void txpopcharar(unsigned char str[]);  
 void workwork();
 void BUZZ(volatile unsigned char * PORT_X,  unsigned char  Nr_Pin, unsigned short duration);
 void Achizitie_DHT11(volatile unsigned char * DDR_X, volatile unsigned char * PORT_X, volatile unsigned char * PIN_X,  unsigned char  Numar_Pin, unsigned char *h, float *t);
 void Robinet(volatile unsigned char * PORT_X, unsigned char Nr_Pin, unsigned char sens);
-
-////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -150,32 +138,14 @@ SPCR=(0<<SPIE) | (0<<SPE) | (0<<DORD) | (0<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<
 // TWI initialization          // TWI disabled
 TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 
-//glob enabl interr initialli here
 
-
-///////////////////////////////////////////////////////////////////////////////
-	//DDRC |= (1<<0);//pinMode(A0, OUTPUT);  //pinMode(A1, OUTPUT);  //pinMode(A2, OUTPUT);
-    //DDRD |= (1<<4);//pinMode(servo1, OUTPUT);//9
-    //PORTB &= ~(1<<1);//digitalWrite(servo1, LOW);
-    //DDRB &= ~(1<<2); //input b2   //pinMode(w_sw1, INPUT_PULLUP);////
-    //PORTB |= (1<<2); //pull-up b2
-    //DDRD &= ~(1<<7); //input b2 //pinMode(w_sw2, INPUT_PULLUP);
-    //PORTD |= (1<<7); //pull-up b2
-    //DDRD |= (1<<3) | (1<<6);//pinMode(buzz1, OUTPUT);//pinMode(buzz2, OUTPUT); 
-    //Robinet(&PORTD, 4, false); //Robinet(servo2, false);//Robinet(servo3, false);
-/////////////////////////////////////////////////////////////////////////////////////////
-
-Robinet(&PORTD, 4, false); Robinet(&PORTD, 7, false); Robinet(&PORTB, 2, false);
+	
+	
+///////////////////////////////////////////////////////////////////
+Robinet(&PORTD, 4, false); //se duc servomoarele in pozitia OFF
+Robinet(&PORTD, 7, false); 
+Robinet(&PORTB, 2, false);
 //PORTC &= ~(1 << 0);
-
-//empty rx buffer because esp throw some $#!7 when is powered on. 
-//if(rx_counter0) {
-//    cnt0 = rx_counter0;
-//    for (i = 0; i < cnt0; i++) { // iau tot rx bufferul disponibil ~ readStr()
-//        from_esp[i] = rxpushchar(); 
-//    }
-//    delay_ms(25);
-//} 
 
 // Global enable interrupts
 #asm("sei")
@@ -184,7 +154,7 @@ while (1)      {
     
     if(rx_counter0) { 			//daca se receptioneaza
         delay_ms(25); 			//astept sa se primeasca tot pachetul 
-        cnt0 = rx_counter0;     //tin minte cate caractere s-au receptionat deoarece rx_counter0 se va modifica in timpul citirii buffer-ului
+        cnt0 = rx_counter0;     	//tin minte cate caractere s-au receptionat deoarece rx_counter0 se va modifica in timpul citirii buffer-ului
         for (i = 0; i < cnt0; i++) { 		// preiau tot rx buffer-ul disponibil 
             from_esp[i] = rxpushchar(); 
         }
@@ -233,7 +203,7 @@ while (1)      {
             a2_previousTime = currentTime+500;
         }
     }
-    if(alarm3) {////////////////////////////////////////////////
+    if(alarm3) 
         if(currentTime - a3_previousTime > 500) {
             BUZZ(&PORTB, 1, 500);
             a3_previousTime = currentTime+500;
@@ -243,13 +213,13 @@ while (1)      {
 }//main
 
 void workwork() {
-	    Achizitie_DHT11(&DDRD, &PORTD, &PIND, 2, &h1, &t1);
+	Achizitie_DHT11(&DDRD, &PORTD, &PIND, 2, &h1, &t1);
         Achizitie_DHT11(&DDRD, &PORTD, &PIND, 5, &h2, &t2);
         Achizitie_DHT11(&DDRB, &PORTB, &PINB, 0, &h3, &t3);
         
         if(t1 <= set_temp[0] - decalaj_Mod && heat1 == false) {
             heat1 = true;
-            Robinet(&PORTD, 4, true);//D4 servo1
+            Robinet(&PORTD, 4, true);	//D4 servo1
         }
         else if(t1 >= set_temp[0] + decalaj_Mod && heat1 == true) {
             heat1 = false;
@@ -257,33 +227,33 @@ void workwork() {
         }              
         if(t2 <= set_temp[1] - decalaj_Mod && heat2 == false) {
             heat2 = true;
-            Robinet(&PORTD, 7, true);//D7 servo2
+            Robinet(&PORTD, 7, true);	//D7 servo2
         }
         else if( t2 >= set_temp[1] + decalaj_Mod && heat2 == true) {
             heat2 = false;
-            Robinet(&PORTD, 7, false);//D7 servo2
+            Robinet(&PORTD, 7, false);	//D7 servo2
         }
         if(t3 <= set_temp[2] - decalaj_Mod && heat3 == false) {
             heat3 = true;
-            Robinet(&PORTB, 2, true);//B2 servo3
+            Robinet(&PORTB, 2, true);	//B2 servo3
         }
         else if( t3 >= set_temp[2] + decalaj_Mod && heat3 == true) {
             heat3 = false;
-            Robinet(&PORTB, 2, false);//B2 servo3
+            Robinet(&PORTB, 2, false);	//B2 servo3
         }
         
                       
         if ( (heat1 || heat2 || heat3) && heat == false){
             heat = true;
-            PORTC |= (1<<0); //digitalWrite(A0, HIGH);/////////
+            PORTC |= (1<<0); 		//A0 HIGH
         }else if(heat1 == false && heat2 == false && heat3 == false && heat == true){
             heat = false;
-        	PORTC &= ~(1<<0); //digitalWrite(A0, LOW);/////////
+        	PORTC &= ~(1<<0);	//A0 LOW
         }               
         
-        window1 = !(PINC & (1<<3));  //window1 = !digitalRead(w_sw1);c3
-        window2 = !(PINC & (1<<2));  //window2 = !digitalRead(w_sw2);c2
-        window3 = !(PINC & (1<<1));/////////////////////////////////// c1
+        window1 = !(PINC & (1<<3));  		//c3
+        window2 = !(PINC & (1<<2)); 		//c2
+        window3 = !(PINC & (1<<1));		//c1
         if(window1 && heat1 && !alarm1) {
             alarm1 = true;
         }else if( (!window1 || !heat1) && alarm1) {
@@ -300,8 +270,8 @@ void workwork() {
             alarm3 = false;
         }
 
-        sprinHigh0(to_esp, "%d%d%d%.1f%.1f%.1f%d%d%d%d%d%d%d%d%d%d\r\n", h1, h2, h3, t1, t2, t3, heat, heat1, heat2, heat3, window1, window2, window3, alarm1, alarm2, alarm3);
-        txpopcharar(&to_esp);    //&   ???????????
+        sprintf(to_esp, "%d%d%d%.1f%.1f%.1f%d%d%d%d%d%d%d%d%d%d\r\n", h1, h2, h3, t1, t2, t3, heat, heat1, heat2, heat3, window1, window2, window3, alarm1, alarm2, alarm3);
+        txpopcharar(&to_esp);   	//trimit referinta ( doar adresa,  nu tot stringul)
         previousTime = currentTime;
 }
 
@@ -313,40 +283,40 @@ unsigned long mili()  { //functie ce returneaza valoarea timpului[ms] parcurs de
     return m;    
 }
 
-unsigned char rxpushchar() { //functie ce returneaza urmatorul element din bufferul rx
+unsigned char rxpushchar() {			//functie ce returneaza urmatorul element din bufferul rx
     char data;                            
     while (rx_counter0==0);               	//daca bufferul e gol, astept sa primeasca ceva intai
     data = rx_buffer0[rx_rd_index0++];		//data primeste cea mai veche valoare din buffer
     if (rx_rd_index0 == RX_BUFFER_SIZE0) 	//daca am citit tot buffer-ul
-        rx_rd_index0=0;						//resetare index citire
-    #asm("cli")								//dezact intreruperi ca sa nu se modifice counter in timp ce il decrementez
-    --rx_counter0;							//am citit o valoare din buffer => -1 element
-    #asm("sei")								//reactivare intrerupero=i
-    return data;							//returneaza caracterul extras din buffer
+        rx_rd_index0=0;					//resetare index citire
+    #asm("cli")					//dezact intreruperi ca sa nu se modifice counter in timp ce il decrementez
+    --rx_counter0;				//am citit o valoare din buffer => -1 element
+    #asm("sei")					//reactivare intrerupero=i
+    return data;				//returneaza caracterul extras din buffer
 }
 
 void txpopcharar(unsigned char str[]) {  //*
     unsigned char idx = 0;
-    while(str[idx] != 0)  {  //daca char = 0 atunci am terminat transmisia
-    	while (!( UCSR0A & (1<<UDRE0))); /* astept txbufferReady*/
-        UDR0 = str[idx++];  /* odata ce caracterele ajung în buffer, ele sunt trimise */ 
+    while(str[idx] != 0)  {  			//daca char = 0 atunci am terminat transmisia
+    	while (!( UCSR0A & (1<<UDRE0)));		// astept txbufferReady
+        UDR0 = str[idx++];  				// odata ce caracterele ajung în buffer, ele sunt trimise 
         }
 }
 
 void Robinet(volatile unsigned char * PORT_X, unsigned char Nr_Pin, unsigned char sens) {
-    if(sens == 1){						//daca se doreste deschiderea robinetului
-        for(i=0;i<=100;i++){ 			//50Hz=>20ms*100=2s durata de deschidere robinet
-            *PORT_X |= (1 << Nr_Pin); 	//trimit "1" catre servomotor
-            delay_us(High1);    		//pentru High1 = 500us
-            *PORT_X &= ~(1 << Nr_Pin);	//trimit "0" catre servomotor
-            delay_us(Low1);   			//pentru Low1 = 19500us
+    if(sens == 1){				//daca se doreste deschiderea robinetului
+        for(i=0;i<=100;i++){ 				//50Hz=>20ms*100=2s durata de deschidere robinet
+            *PORT_X |= (1 << Nr_Pin); 				//trimit "1" catre servomotor
+            delay_us(High1);    				//pentru High1 = 500us
+            *PORT_X &= ~(1 << Nr_Pin);				//trimit "0" catre servomotor
+            delay_us(Low1);   					//pentru Low1 = 19500us
         }
-    }else{								//daca se doreste inchiderea robinetului
-        for(i=0;i<=100;i++){ 			//2s durata de inchidere robinet
-            *PORT_X |= (1 << Nr_Pin); 	//trimit "1" catre servomotor
-            delay_us(High0);    		//pentru High0 = 500us
-            *PORT_X &= ~(1 << Nr_Pin);	//trimit "0" catre servomotor
-            delay_us(Low0);   			//pentru Low1 = 19500us
+    }else{					//daca se doreste inchiderea robinetului
+        for(i=0;i<=100;i++){ 				//2s durata de inchidere robinet
+            *PORT_X |= (1 << Nr_Pin); 				//trimit "1" catre servomotor
+            delay_us(High0);    				//pentru High0 = 500us
+            *PORT_X &= ~(1 << Nr_Pin);				//trimit "0" catre servomotor
+            delay_us(Low0);   					//pentru Low1 = 19500us
         }
     }
 }//Robinet       
@@ -354,60 +324,44 @@ void Robinet(volatile unsigned char * PORT_X, unsigned char Nr_Pin, unsigned cha
 void BUZZ(volatile unsigned char * PORT_X,  unsigned char  Nr_Pin, unsigned short duration) {
     unsigned long startTime=mili();
     while (mili()-startTime < duration) {
-		*PORT_X |= (1 << Nr_Pin); //digitalWrite(pin,HIGH);
+		*PORT_X |= (1 << Nr_Pin); 			//digitalWrite(pin,HIGH);
         delay_us(halfPeriod);
-        *PORT_X &= ~(1 << Nr_Pin); //digitalWrite(pin,LOW);
+        *PORT_X &= ~(1 << Nr_Pin); 				//digitalWrite(pin,LOW);
         delay_us(halfPeriod);
     }
 }//buzz
 
 //Achizitie_DHT11(DDRC, PORTC, PINC, PC1, h, t); 
-void Achizitie_DHT11(volatile unsigned char * DDR_X,//reg responsbil de tipul pinilor: intrare sau iesire
-                   volatile unsigned char * PORT_X, //reg responsabil de valoarea iesirii
-                   volatile unsigned char * PIN_X,  //reg responsabil de valoarea intrarii
+void Achizitie_DHT11(volatile unsigned char * DDR_X,						//reg responsbil de tipul pinilor: intrare sau iesire
+                   volatile unsigned char * PORT_X, 						//reg responsabil de valoarea iesirii
+                   volatile unsigned char * PIN_X, 						 //reg responsabil de valoarea intrarii
                    unsigned char  Numar_Pin, unsigned char* h, float *t) {
     unsigned char byte_index, bit_index, buffer = 0, timeout;
-    *DDR_X |= (1 << Numar_Pin); 	//setez pinul ca si iesire pentru a trimite semnalul de interogare
-    *PORT_X &= ~(1 << Numar_Pin); 	//trimit semnal LOW cu rol de interogare
-    delay_ms(20); 					//astept ca senzorul sa primeasca semnalul de interogare >18ms
-    *DDR_X &= ~(1 << Numar_Pin); 	//setez pinul ca si intrare pentru a primi date de la senzor
-    delay_us(32); 					//astept 20-40 us
-    delay_us(82); 					//senzorul trimite "0" 80ms => semnal de raspuns
-    delay_us(82); 					//senzorul trimite "1" 80ms dupa semnal de raspuns
-    for(byte_index=0; byte_index<4; byte_index++){		//senzorul incepe sa trimita datele
+    *DDR_X |= (1 << Numar_Pin); 								//setez pinul ca si iesire pentru a trimite semnalul de interogare
+    *PORT_X &= ~(1 << Numar_Pin); 								//trimit semnal LOW cu rol de interogare
+    delay_ms(20); 										//astept ca senzorul sa primeasca semnalul de interogare >18ms
+    *DDR_X &= ~(1 << Numar_Pin); 								//setez pinul ca si intrare pentru a primi date de la senzor
+    delay_us(32); 										//astept 20-40 us
+    delay_us(82); 										//senzorul trimite "0" 80ms => semnal de raspuns
+    delay_us(82); 										//senzorul trimite "1" 80ms dupa semnal de raspuns
+    for(byte_index=0; byte_index<4; byte_index++){						//senzorul incepe sa trimita datele
         buffer = 0;		
         for(bit_index=0; bit_index<8; bit_index++){		
             timeout = 0;
             while((~*PIN_X & (1 << Numar_Pin)) && timeout < 25){//while "0"
-                timeout++;				//senzorul trimite "0" inainte de fiecare bit 26-28us	
-                delay_us(4);			//daca trimite "0" mai mult de 100us renunt la achizitie
+                timeout++;									//senzorul trimite "0" inainte de fiecare bit 26-28us	
+                delay_us(4);									//daca trimite "0" mai mult de 100us renunt la achizitie
             }
-            delay_us(40); 						//citesc semnalul primit dupa 40 ms
-            if(*PIN_X & (1 << Numar_Pin)){		//daca inca e High ~> "1"
-                buffer |= 1 << (7-bit_index);	//adaug "1" la buffer pe pozitia curenta
-                delay_us(40);					//daca a fost "1" astept sa coboare in "0"
+            delay_us(40); 									//citesc semnalul primit dupa 40 ms
+            if(*PIN_X & (1 << Numar_Pin)){							//daca inca e High ~> "1"
+                buffer |= 1 << (7-bit_index);							//adaug "1" la buffer pe pozitia curenta
+                delay_us(40);									//daca a fost "1" astept sa coboare in "0"
             }//alHigh0el e  "0" deci continui cu urmatorul bit    
         }
-        if(buffer){											//daca am primit date le salvez corespunzator
-            if(byte_index == 0) *h = buffer;             	//parte intreaga h
-                else if(byte_index == 2) *t = buffer;    	//parte intreaga t
+        if(buffer){										//daca am primit date le salvez corespunzator
+            if(byte_index == 0) *h = buffer;             					//parte intreaga h
+                else if(byte_index == 2) *t = buffer;    					//parte intreaga t
                     else if(byte_index == 3) *t = (*t * 10 + buffer) / 10 ; // parte zecimala t; 
-        }																	// impart la 10 sa fie 
-    }																		// de forma xx.x
+        }											// impart la 10 sa fie 
+    }												// de forma xx.x
 }//Achizitie_DHT11 
-
-
-/*
-
-void txpopchar(unsigned char *chr) {
-	while (!( UCSR0A & (1<<UDRE0))); // stai daca ~txbufferReady
-        UDR0 = *chr;           // Put data into buffer, sends the data 
-}
-
-interrupt [TIM0_OVF] void timer0_ovf_isr(void) { // Timer 0 overflow interrupt service routine
-TCNT0=0x06;    // Reinitialize Timer 0 value
-// Place your code here
-	Time = 0, currentTime = 0, a1_previousTime=0, a2_previousTime = 0, a3_previousTime = 0,  previousTime = 0, lastTime = 0;
-}
-
-*/
