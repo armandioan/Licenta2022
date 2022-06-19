@@ -203,7 +203,7 @@ while (1)      {
             a2_previousTime = currentTime+500;
         }
     }
-    if(alarm3) 
+    if(alarm3) {
         if(currentTime - a3_previousTime > 500) {
             BUZZ(&PORTB, 1, 500);
             a3_previousTime = currentTime+500;
